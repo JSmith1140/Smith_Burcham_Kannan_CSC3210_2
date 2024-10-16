@@ -25,6 +25,29 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 /* CREATE/DRAW STUFF HERE */
 
 renderer.render( scene, camera );
+
+/*additional infinite geometries*/
+
+function randomizeShape() {
+    var shapes = [
+        new THREE.BoxGeometry(Math.random(), Math.random(), Math.random()),
+        new THREE.SphereGeometry(Math.random()),
+        new THREE.CylinderGeometry(Math.random(), Math.random(), Math.random()), 
+        new THREE.TetrahedronGeometry(Math.random())
+    ];
+}
+
+function randomizeColor() {
+    for(i = 0; i < 6; i++) {
+        color += Math.floor(Math.random() * 16);
+    }
+}
+
+var geom = randomizeShape();
+var material = new THREE.MeshBasicMaterial({color: randomizeColor()});
+var object = new THREE.Mesh(geom, material);
+object.position.set(Math.random(), Math.random(), Math.random());
+scene.add(object);
     </script>
 </body>
 </html>
