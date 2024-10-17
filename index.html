@@ -52,6 +52,31 @@
 
             return mesh;
         }
+        
+        const objects = []; // objects array
+        for (let i = 0; i < 500; i++) { // creates 500 random 3D objects
+            const obj = createRandomObject();
+            objects.push(obj);
+            scene.add(obj); // add obj to scene
+        }
+
+        scene.add(new THREE.AmbientLight(0xffffff)); // adds lighting to show shape colors
+        const light = new THREE.DirectionalLight(0xffffff); // adds directional lighting to make shapes appear 3D
+				light.position.set(1, 1, 1).normalize();
+				scene.add(light); // adds light to the scene
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const time = Date.now() * 0.001; // calculates time
+            objects.forEach((obj) => { // shrinks and grows the object
+                const scale = Math.sin(time + obj.position.x) * 0.5 + 1;
+                obj.scale.set(scale, scale, scale);
+            });
+            renderer.render(scene, camera); // render the scene and camera
+        }
+        animate(); // call animate function
     </script>
 </body>
 </html>
