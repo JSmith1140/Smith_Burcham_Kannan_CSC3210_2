@@ -4,54 +4,54 @@
     <title> CSC3210 Smith_Burcham_Kannan Project 2 </title>
 </head>
 <body>
-
-    <canvas id="myCanvas" width="1200" height="900"></canvas>
-
+    <canvas id="myCanvas"></canvas>
     <script type="module">
-import * as THREE from 'three';
+        import * as THREE from 'three'; // import THREE.js
 
-var scene = new THREE.Scene();
+        const canvas = document.getElementById('myCanvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(35, canvas.width / canvas.height, 0.1, 3000);
+        camera.position.z = 100; // sets camera position
+        scene.add(camera); // adds camera to scene
 
-var camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, .1, 3000 );
-camera.position.z = 100;  
-camera.lookAt( new THREE.Vector3(0.0,0.0,0.0));
-scene.add( camera );
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+        renderer.setClearColor(0xffffff); // sets background color to white
+        renderer.setSize(window.innerWidth, window.innerHeight); // sets render size to window dimensions
 
-var renderer = new THREE.WebGLRenderer({canvas: myCanvas, antialias: true});
-renderer.setClearColor(0x000000);
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.setSize(window.innerWidth, window.innerHeight);
+        // Function to create a random 3D object
+        function createRandomObject() {
+            let geometryShape;
 
-/* CREATE/DRAW STUFF HERE */
+            const randomShape = Math.floor(Math.random() * 3); // takes a random number between 1 and 3
+            if (randomShape == 0) { // if number is 0 create a sphere
+                geometryShape = 'sphere';
+            } else if (randomShape == 1) { // if number is 1 create a box
+                geometryShape = 'box';
+            } else { // if number is 2 create a tetrahedron
+                geometryShape = 'tetrahedron'; 
+            }
 
-renderer.render( scene, camera );
+            let geometry;
+            // takes the output of geometryShape and create the geometry
+            if (geometryShape == 'sphere') {
+                geometry = new THREE.SphereGeometry(Math.random() + 1, 32, 32); // creates sphere with random radius
+            } else if (geometryShape == 'box') {
+                geometry = new THREE.BoxGeometry(Math.random() + 1, Math.random() + 1, Math.random() + 1); // creates box with random dimensions
+            } else {
+                geometry = new THREE.TetrahedronGeometry(Math.random() + 1); // creates tetrahedron with random radius
+            }
 
-/*additional infinite geometries*/
+            const color = Math.random() * 0xffffff; // gives mesh a random color
+            const material = new THREE.MeshStandardMaterial({ color: color });
+            const mesh = new THREE.Mesh(geometry, material);
 
-function randomizeShape() {
-    var shapes = [
-        new THREE.BoxGeometry(Math.random(), Math.random(), Math.random()),
-        new THREE.SphereGeometry(Math.random()),
-        new THREE.CylinderGeometry(Math.random(), Math.random(), Math.random()), 
-        new THREE.TetrahedronGeometry(Math.random())
-    ];
-}
+            // sets the x, y, and z position of the mesh
+            mesh.position.x = Math.random() * 200 - 100;
+            mesh.position.y = Math.random() * 200 - 100;
+            mesh.position.z = Math.random() * 200 - 100;
 
-function randomizeColor() {
-    for(i = 0; i < 6; i++) {
-        color += Math.floor(Math.random() * 16);
-    }
-}
-
-var geom = randomizeShape();
-var material = new THREE.MeshBasicMaterial({color: randomizeColor()});
-var object = new THREE.Mesh(geom, material);
-object.position.set(Math.random(), Math.random(), Math.random());
-scene.add(object);
-
-/*second rendering for rear-view mirror*/
-
-camera.position.set();
+            return mesh;
+        }
     </script>
 </body>
 </html>
