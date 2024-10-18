@@ -65,10 +65,47 @@
 				light.position.set(1, 1, 1).normalize();
 				scene.add(light); // adds light to the scene
 
+        // Request pointer lock
+        function lockPointer() {
+            canvas.requestPointerLock();
+        }
+
+        canvas.addEventListener('click', lockPointer);
+
+        // Mouse movement event
+        let isPointerLocked = false;
+
+        document.addEventListener('pointerlockchange', () => {
+            isPointerLocked = document.pointerLockElement === canvas;
+        });
+
+        document.addEventListener('mousemove', (event) => {
+            if (!isPointerLocked) return;
+
+            // Update camera rotation based on mouse movement
+            camera.rotation.y -= event.movementX * 0.002; // Rotate around Y-axis
+            camera.rotation.x -= event.movementY * 0.002; // Rotate around X-axis
+        });
+
+        // Move the camera forward with delta time
+        const cameraSpeed = 10; // Speed of the camera movement (units per second)
+
+        let lastTime = performance.now(); // Initialize the last time
+
         // Animation loop
         function animate() {
             requestAnimationFrame(animate);
-            
+            const currentTime = performance.now(); // Get the current time
+            const deltaTime = (currentTime - lastTime) / 1000; // Calculate delta time in seconds
+            lastTime = currentTime; // Update last time
+
+            const forward = new THREE.Vector3();
+            camera.getWorldDirection(forward);
+            forward.normalize();
+
+            // Move the camera based on the delta time
+            camera.position.add(forward.multiplyScalar(cameraSpeed * deltaTime));
+
             const time = Date.now() * 0.001; // calculates time
             objects.forEach((obj) => { // shrinks and grows the object
                 const scale = Math.sin(time + obj.position.x) * 0.5 + 1;
