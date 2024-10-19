@@ -1,69 +1,76 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title> CSC3210 Smith_Burcham_Kannan Project 2 </title>
+    <title>CSC3210 Smith_Burcham_Kannan Project 2</title>
+    <style>
+    </style>
 </head>
 <body>
     <canvas id="myCanvas"></canvas>
     <script type="module">
-        import * as THREE from 'three'; // import THREE.js
+        import * as THREE from 'three';
 
         const canvas = document.getElementById('myCanvas');
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(35, canvas.width / canvas.height, 0.1, 3000);
-        camera.position.z = 100; // sets camera position
-        scene.add(camera); // adds camera to scene
+        const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 3000);
+        camera.position.set(0, 0, 100); // sets camera position
 
         const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-        renderer.setClearColor(0xffffff); // sets background color to white
-        renderer.setSize(window.innerWidth, window.innerHeight); // sets render size to window dimensions
+        renderer.setClearColor(0xffffff); // background color is white
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        const objectSpawn = []; // spawns the objects
+        const numObjects = 500; // Number of objects
+        const visibilityRange = 100; // Range objects will be visible
+        const spawnDistance = 500; // Distance to spawn objects
+        const recycleDistance = 200; // distance to recycle objects
 
         // Function to create a random 3D object
         function createRandomObject() {
-            let geometryShape;
-
-            const randomShape = Math.floor(Math.random() * 3); // takes a random number between 1 and 3
-            if (randomShape == 0) { // if number is 0 create a sphere
-                geometryShape = 'sphere';
-            } else if (randomShape == 1) { // if number is 1 create a box
-                geometryShape = 'box';
-            } else { // if number is 2 create a tetrahedron
-                geometryShape = 'tetrahedron'; 
-            }
-
             let geometry;
-            // takes the output of geometryShape and create the geometry
-            if (geometryShape == 'sphere') {
-                geometry = new THREE.SphereGeometry(Math.random() + 1, 32, 32); // creates sphere with random radius
-            } else if (geometryShape == 'box') {
-                geometry = new THREE.BoxGeometry(Math.random() + 1, Math.random() + 1, Math.random() + 1); // creates box with random dimensions
-            } else {
-                geometry = new THREE.TetrahedronGeometry(Math.random() + 1); // creates tetrahedron with random radius
+            const randomShape = Math.floor(Math.random() * 3); // takes a random number between 1 and 3
+
+            if (randomShape === 0) { // if number is 0 create a sphere
+                geometry = new THREE.SphereGeometry(Math.random() + 1, 32, 32);
+            } else if (randomShape === 1) { // if number is 1 create a box
+                geometry = new THREE.BoxGeometry(Math.random() + 1, Math.random() + 1, Math.random() + 1);
+            } else { // if number is 2 create a tetrahedron
+                geometry = new THREE.TetrahedronGeometry(Math.random() + 1);
             }
 
             const color = Math.random() * 0xffffff; // gives mesh a random color
             const material = new THREE.MeshStandardMaterial({ color: color });
             const mesh = new THREE.Mesh(geometry, material);
 
-            // sets the x, y, and z position of the mesh
-            mesh.position.x = Math.random() * 200 - 100;
-            mesh.position.y = Math.random() * 200 - 100;
-            mesh.position.z = Math.random() * 200 - 100;
-
             return mesh;
         }
-        
-        const objects = []; // objects array
-        for (let i = 0; i < 500; i++) { // creates 500 random 3D objects
+
+        // Creates the "Infinite Objects"
+        for (let i = 0; i < numObjects; i++) { // creates a set number of objects that are reused to create infinite effect
             const obj = createRandomObject();
-            objects.push(obj);
+            setRandomPosition(obj);
+            objectSpawn.push(obj);
             scene.add(obj); // add obj to scene
         }
 
         scene.add(new THREE.AmbientLight(0xffffff)); // adds lighting to show shape colors
         const light = new THREE.DirectionalLight(0xffffff); // adds directional lighting to make shapes appear 3D
-				light.position.set(1, 1, 1).normalize();
-				scene.add(light); // adds light to the scene
+        light.position.set(1, 1, 1).normalize();
+        scene.add(light); // adds light to the scene
+
+        // Sets a random position for the object
+        function setRandomPosition(obj) {
+            const randomX = Math.random() * 200 - 100; // Random X 
+            const randomY = Math.random() * 200 - 100; // Random Y
+            const randomZ = camera.position.z - (Math.random() * spawnDistance + visibilityRange); // Random Z
+
+            obj.position.set(randomX, randomY, randomZ);
+        }
+
+        // Recycle an object
+        function recycleObject(obj) {
+            setRandomPosition(obj); // gives new random position for object
+        }
 
         // Request pointer lock
         function lockPointer() {
@@ -74,7 +81,6 @@
 
         // Mouse movement event
         let isPointerLocked = false;
-
         document.addEventListener('pointerlockchange', () => {
             isPointerLocked = document.pointerLockElement === canvas;
         });
@@ -106,14 +112,26 @@
             // Move the camera based on the delta time
             camera.position.add(forward.multiplyScalar(cameraSpeed * deltaTime));
 
-            const time = Date.now() * 0.001; // calculates time
-            objects.forEach((obj) => { // shrinks and grows the object
+            // Update object positions and recycle them if needed
+            objectSpawn.forEach((obj) => {
+                obj.position.z += cameraSpeed * deltaTime;
+
+            // Recycle object if it is outside of the camera and recycle distance
+            if (obj.position.z > camera.position.z + recycleDistance) {
+                recycleObject(obj);
+        }
+            });
+            const time = performance.now() * 0.001; // calculates time
+            objectSpawn.forEach((obj) => { // shrinks and grows the object
                 const scale = Math.sin(time + obj.position.x) * 0.5 + 1;
                 obj.scale.set(scale, scale, scale);
             });
-            renderer.render(scene, camera); // render the scene and camera
+
+
+            renderer.render(scene, camera); // Render the scene and camera
         }
-        animate(); // call animate function
+
+        animate(); // Start the animation loop
     </script>
 </body>
 </html>
