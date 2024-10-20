@@ -21,9 +21,9 @@
 
         const objectSpawn = []; // spawns the objects
         const numObjects = 500; // Number of objects
-        const visibilityRange = 100; // Range objects will be visible
+        const visibilityRange = 150; // Range objects will be visible
         const spawnDistance = 500; // Distance to spawn objects
-        const recycleDistance = 200; // distance to recycle objects
+        const recycleDistance = 250; // distance to recycle objects
 
         // Function to create a random 3D object
         function createRandomObject() {
@@ -41,6 +41,26 @@
             const color = Math.random() * 0xffffff; // gives mesh a random color
             const material = new THREE.MeshStandardMaterial({ color: color });
             const mesh = new THREE.Mesh(geometry, material);
+
+            const randomDrift = Math.random(); // assigns randomDrift a random number between 0 and 1
+            if(randomDrift < 0.5){ // if randomDrift is less than 0.5 make geometry a linear drift
+                mesh.drift = 'linear';
+            } else { // if randomDrift is greater than 0.5 make geometry a parabolic drift
+                mesh.drift = 'parabolic';
+            }
+
+            mesh.driftSpeed = Math.random() * 0.05 + 0.01; // random drift speed adds 0.01 so it will never be 0
+            if (mesh.drift == 'linear') {
+                // Linear drift will only move along the x-axis
+                mesh.driftDirection = new THREE.Vector3(
+                    Math.random() * 0.1 + 0.05, // Random positive x direction
+                    0, // No movement in y axis
+                    0 // No movement in z axis
+                ).normalize();
+            } else {
+                // Parabolic drift will only move along the y axis
+                mesh.driftDirection = new THREE.Vector3(0, Math.random() * 0.1 + 0.05, 0); 
+            }
 
             return mesh;
         }
@@ -112,21 +132,25 @@
             // Move the camera based on the delta time
             camera.position.add(forward.multiplyScalar(cameraSpeed * deltaTime));
 
-            // Update object positions and recycle them if needed
             objectSpawn.forEach((obj) => {
-                obj.position.z += cameraSpeed * deltaTime;
+                // Updates object position based on drift type
+                if(obj.drift == 'linear'){
+                    obj.position.x += obj.driftDirection.x * obj.driftSpeed; // move along x-axis
+                } else if (obj.drift == 'parabolic'){
+                    obj.position.y += Math.sin(currentTime * 0.001 + obj.position.x) * 0.1; // move along y-axis
+                }
 
-            // Recycle object if it is outside of the camera and recycle distance
-            if (obj.position.z > camera.position.z + recycleDistance) {
-                recycleObject(obj);
-        }
+                // Recycle object if it is outside of the camera position and recycle distance
+                if(obj.position.z > camera.position.z + recycleDistance){
+                    recycleObject(obj);
+                }
             });
+
             const time = performance.now() * 0.001; // calculates time
             objectSpawn.forEach((obj) => { // shrinks and grows the object
                 const scale = Math.sin(time + obj.position.x) * 0.5 + 1;
                 obj.scale.set(scale, scale, scale);
             });
-
 
             renderer.render(scene, camera); // Render the scene and camera
         }
