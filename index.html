@@ -156,6 +156,12 @@
         }
 
         animate(); // Start the animation loop
+
+        //create rear-view mirror
+        function rearviewMirrorViewport(){
+            var viewport = obj.position.set(randomX + 1 * innerWidth * 0.5 + screenX, 1 - randomY * innerWidth * 0.5 + screenY, randomZ);
+            add.scene(viewport);
+        }
     </script>
 </body>
 </html>
