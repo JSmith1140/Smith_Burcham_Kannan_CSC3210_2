@@ -137,13 +137,14 @@
         }
 
         function collisionDetection() {
-            plane
-            object
-            if(plane.setRandomPosition() = object.setRandomPosition()) {
+            plane = createRandomObject();
+            object = createRandomObject();
+            if(plane.position = object.position) {
                 do{
-                    screenLeft = screenX - 10
-                    screenRight = screenX + 10
-                } while(plane.setRandomPosition() = object.setRandomPosition());
+                    camera.position.set(camera.position + 5, 0, 0);
+                    camera.position.set(0, camera.position + 5, 0);
+                    break
+                } while(plane.position = object.position);
             }
         }
 
