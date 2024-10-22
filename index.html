@@ -189,6 +189,12 @@
         }
 
         animate(); // Start the animation loop
+
+        var rendererForStencilTest = new THREE.WebGLRenderer({stencil : true}); 
+        var context = renderer.getContext();
+        context.enable(context.STENCIL_TEST);
+        context.stencilFunc(context.LESS, 1, 0xffffffff);
+        context.stencilOp(context.REPLACE, context.REPLACE, context.REPLACE);
     </script>
 </body>
 </html>
