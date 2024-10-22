@@ -12,7 +12,8 @@
 
         const canvas = document.getElementById('myCanvas');
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 3000);
+        const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 3000); // regular camera
+        const rearViewCamera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 3000); // rear view camera
         camera.position.set(0, 0, 100); // sets camera position
 
         const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
@@ -114,9 +115,37 @@
         });
 
         // Move the camera forward with delta time
-        const cameraSpeed = 10; // Speed of the camera movement (units per second)
+        const cameraSpeed = 10; // speed of the camera movement
 
-        let lastTime = performance.now(); // Initialize the last time
+        let lastTime = performance.now(); // initialize the last time
+        
+        // function to create the viewport for the rearViewMirror and render it
+        function rearViewMirror() {
+            const rearViewSize = { width: 400, height: 300 }; // define size of the rear view mirror
+
+            renderer.setScissorTest(true); // start the scissor test
+
+            renderer.setViewport(window.innerWidth - rearViewSize.width, 0, rearViewSize.width, rearViewSize.height); // set viewport for the rear camera
+            renderer.setScissor(window.innerWidth - rearViewSize.width, 0, rearViewSize.width, rearViewSize.height); // set the s
+
+            rearViewCamera.position.copy(camera.position); // copy the regular camera position
+            rearViewCamera.rotation.set(camera.rotation.x, camera.rotation.y + Math.PI, camera.rotation.z); // flip the rear camera 180 degrees
+
+            renderer.render(scene, rearViewCamera); // render the scene from the rear-view camera
+
+            renderer.setScissorTest(false); // stop scissor test
+        }
+
+        function collisionDetection() {
+            plane
+            object
+            if(plane.setRandomPosition() = object.setRandomPosition()) {
+                do{
+                    screenLeft = screenX - 10
+                    screenRight = screenX + 10
+                } while(plane.setRandomPosition() = object.setRandomPosition());
+            }
+        }
 
         // Animation loop
         function animate() {
@@ -152,27 +181,13 @@
                 obj.scale.set(scale, scale, scale);
             });
 
-            renderer.render(scene, camera); // Render the scene and camera
+            renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
+            renderer.render(scene, camera); // render the scene and camera
+
+            rearViewMirror(); // render the rearview mirror
         }
 
         animate(); // Start the animation loop
-
-        //create rear-view mirror
-        function rearviewMirrorViewport(){
-            var viewport = obj.position.set(randomX + 1 * innerWidth * 0.5 + screenX, 1 - randomY * innerWidth * 0.5 + screenY, randomZ);
-            add.scene(viewport);
-        }
-
-        function secondRenderRearviewMirror() {
-            plane
-            object
-            if(plane.setRandomPosition() = object.setRandomPosition()) {
-                do{
-                    screenLeft = screenX - 10
-                    screenRight = screenX + 10
-                } while(plane.setRandomPosition() = object.setRandomPosition());
-            }
-        }
     </script>
 </body>
 </html>
