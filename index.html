@@ -144,6 +144,7 @@
         const shakeDistance = 0.5; // shake distance
         let originalCamPosition; // store original camera position
 
+        //detects collision between objects
         function collisionDetection() {
             objectSpawn.forEach((obj) => {
                 const box = new THREE.Box3().setFromObject(obj); // create bounding box for each object
@@ -215,11 +216,28 @@
 
         animate(); // Start the animation loop
 
+        //stencil test
         var rendererForStencilTest = new THREE.WebGLRenderer({ stencil: true });
-        var context = renderer.getContext();
-        context.enable(context.STENCIL_TEST);
-        context.stencilFunc(context.LESS, 1, 0xffffffff);
-        context.stencilOp(context.REPLACE, context.REPLACE, context.REPLACE);
+        rendererForStencilTest.setSize(window.innerWidth, window.innerHeight);
+
+        var contextForStencilTest = renderer.getContext();
+        contextForStencilTest.clearStencil(0);
+        contextForStencilTest.enable(context.STENCIL_TEST);
+        contextForStencilTest.stencilFunc(context.LESS, 1, 0xffffffff);
+        contextForStencilTest.stencilOp(contextForStencilTest.REPLACE, contextForStencilTest.REPLACE, contextForStencilTest.REPLACE);
+
+        var sceneForStencilTest = scene.clone();
+        var box = new THREE.Mesh(geometry, material);
+        sceneForStencilTest.add(box);
+
+        function animateforStencilTest() { 
+            requestAnimationFrame(animate);
+
+            //scene and camera added to render
+            rendererForStencilTest.render(sceneForStencilTest, camera); 
+        }
+
+        animate();
     </script>
 </body>
 </html>
