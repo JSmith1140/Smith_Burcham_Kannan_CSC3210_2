@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>CSC3210 Smith_Burcham_Kannan Project 2</title>
     <style>
     </style>
 </head>
+
 <body>
     <canvas id="myCanvas"></canvas>
     <script type="module">
@@ -44,7 +46,7 @@
             const mesh = new THREE.Mesh(geometry, material);
 
             const randomDrift = Math.random(); // assigns randomDrift a random number between 0 and 1
-            if(randomDrift < 0.5){ // if randomDrift is less than 0.5 make geometry a linear drift
+            if (randomDrift < 0.5) { // if randomDrift is less than 0.5 make geometry a linear drift
                 mesh.drift = 'linear';
             } else { // if randomDrift is greater than 0.5 make geometry a parabolic drift
                 mesh.drift = 'parabolic';
@@ -60,7 +62,7 @@
                 ).normalize();
             } else {
                 // Parabolic drift will only move along the y axis
-                mesh.driftDirection = new THREE.Vector3(0, Math.random() * 0.1 + 0.05, 0); 
+                mesh.driftDirection = new THREE.Vector3(0, Math.random() * 0.1 + 0.05, 0);
             }
 
             return mesh;
@@ -115,10 +117,10 @@
         });
 
         // Move the camera forward with delta time
-        const cameraSpeed = 10; // speed of the camera movement
+        const cameraSpeed = 20; // speed of the camera movement
 
         let lastTime = performance.now(); // initialize the last time
-        
+
         // function to create the viewport for the rearViewMirror and render it
         function rearViewMirror() {
             const rearViewSize = { width: 400, height: 300 }; // define size of the rear view mirror
@@ -136,15 +138,36 @@
             renderer.setScissorTest(false); // stop scissor test
         }
 
+        let shaking = false;
+        const shakeDuration = 1000; // duration of the shake
+        let shakeStartTime = 0; // tracks shake start time
+        const shakeDistance = 0.5; // shake distance
+        let originalCamPosition; // store original camera position
+
         function collisionDetection() {
-            plane = createRandomObject();
-            object = createRandomObject();
-            if(plane.position = object.position) {
-                do{
-                    camera.position.set(camera.position + 5, 0, 0);
-                    camera.position.set(0, camera.position + 5, 0);
-                    break
-                } while(plane.position = object.position);
+            objectSpawn.forEach((obj) => {
+                const box = new THREE.Box3().setFromObject(obj); // create bounding box for each object
+                if (box.containsPoint(camera.position)) { // check if the camera's position is within the object's bounding box
+                    if (!shaking) { // if not shaking
+                        shakeStartTime = performance.now(); 
+                        shaking = true; // Start shaking 
+                        originalCamPosition = camera.position.clone(); // Store the original camera position
+                    }
+                }
+            });
+
+            if(shaking) {
+                const shakeTime = performance.now() - shakeStartTime;
+                if (shakeTime < shakeDuration) { 
+                    // create a random shaking for each axis
+                    const xAxisShaking = (Math.random() - 0.5) * shakeDistance;
+                    const yAxisShaking = (Math.random() - 0.5) * shakeDistance;
+
+                    // change camera position to shake and keep it so camera does not move
+                    camera.position.set(originalCamPosition.x + xAxisShaking, originalCamPosition.y + yAxisShaking, originalCamPosition.z);
+                } else {
+                    shaking = false; // reset back to not shaking
+                }
             }
         }
 
@@ -162,16 +185,18 @@
             // Move the camera based on the delta time
             camera.position.add(forward.multiplyScalar(cameraSpeed * deltaTime));
 
+            collisionDetection(); // calls function collisionDetection
+
             objectSpawn.forEach((obj) => {
                 // Updates object position based on drift type
-                if(obj.drift == 'linear'){
+                if (obj.drift == 'linear') {
                     obj.position.x += obj.driftDirection.x * obj.driftSpeed; // move along x-axis
-                } else if (obj.drift == 'parabolic'){
+                } else if (obj.drift == 'parabolic') {
                     obj.position.y += Math.sin(currentTime * 0.001 + obj.position.x) * 0.1; // move along y-axis
                 }
 
                 // Recycle object if it is outside of the camera position and recycle distance
-                if(obj.position.z > camera.position.z + recycleDistance){
+                if (obj.position.z > camera.position.z + recycleDistance) {
                     recycleObject(obj);
                 }
             });
@@ -190,7 +215,7 @@
 
         animate(); // Start the animation loop
 
-        var rendererForStencilTest = new THREE.WebGLRenderer({stencil : true}); 
+        var rendererForStencilTest = new THREE.WebGLRenderer({ stencil: true });
         var context = renderer.getContext();
         context.enable(context.STENCIL_TEST);
         context.stencilFunc(context.LESS, 1, 0xffffffff);
