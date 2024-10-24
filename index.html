@@ -298,14 +298,14 @@
         var box = new THREE.Mesh(geometry, material);
         sceneForStencilTest.add(box);
 
-        function animateforStencilTest() { 
+        function animateForStencilTest() { 
             requestAnimationFrame(animate);
 
             //scene and camera added to render
             rendererForStencilTest.render(sceneForStencilTest, camera); 
         }
 
-        animate();
+        animateForStencilTest();
     </script>
 </body>
 </html>
