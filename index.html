@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <title>CSC3210 Smith_Burcham_Kannan Project 2</title>
     <style>
@@ -9,6 +8,41 @@
 
 <body>
     <canvas id="myCanvas"></canvas>
+
+    <script type ="x- shader /x- vertex" id ="vertexShader">
+        varying vec3 vColor;
+        varying vec3 vNormal;
+        varying vec3 vLightDirection;
+
+        void main() {
+            vNormal = normalize(normalMatrix * normal);
+            vec4 lightPos = vec4(1.0, 1.0, 1.0, 1.0);
+            vLightDirection = normalize(vec3(lightPos) - vec3(modelViewMatrix * vec4(position, 1.0)));
+
+            // Color based on position 
+            vColor = vec3(position.x * 0.5 + 0.5, position.y * 0.5 + 0.5, 1.0);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    </script>
+
+    <script type="x-shader/x-fragment" id="fragmentShader">
+        varying vec3 vNormal;
+        varying vec3 vLightDirection;
+
+        uniform vec3 uColor;
+        uniform vec3 ambientLightColor;
+        uniform vec3 directionalLightColor;
+       
+        void main() {
+            vec3 normal = normalize(vNormal);
+            vec3 ambient = ambientLightColor * uColor;
+
+            float diff = max(dot(normal, vLightDirection), 0.0);
+
+            gl_FragColor = vec4(ambient + directionalLightColor * diff * uColor, 1.0); // gives color
+        }
+    </script>
+
     <script type="module">
         import * as THREE from 'three';
 
@@ -22,25 +56,20 @@
         renderer.setClearColor(0xffffff); // background color is white
         renderer.setSize(window.innerWidth, window.innerHeight);
 
-        // Particle effect setup
+         // Particle effect setup
          function createParticleEffect(position) {
             const particleCount = 500; // Number of particles
             const particles = new THREE.BufferGeometry();
             const positions = new Float32Array(particleCount * 3); // 3 coordinates for each particle
-
             for (let i = 0; i < particleCount; i++) {
                 positions[i * 3] = position.x + (Math.random()- 0.5) * 30;   // x
                 positions[i * 3 + 1] = position.y + (Math.random()- 0.5) * 30; // y
                 positions[i * 3 + 2] = position.z + (Math.random()- 0.5) * 30; // z
             }
-
             particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
             const particleMaterial = new THREE.PointsMaterial({ color: 0xff0000, size: 1.0, sizeAttenuation: true });
             const particleSystem = new THREE.Points(particles, particleMaterial);
-
             scene.add(particleSystem);
-
             // Remove particles after a short time
             setTimeout(() => {
                 scene.remove(particleSystem);
@@ -48,7 +77,7 @@
         }
 
         const objectSpawn = []; // spawns the objects
-        const numObjects = 500; // Number of objects
+        const numObjects = 750; // Number of objects
         const visibilityRange = 150; // Range objects will be visible
         const spawnDistance = 500; // Distance to spawn objects
         const recycleDistance = 250; // distance to recycle objects
@@ -66,8 +95,18 @@
                 geometry = new THREE.TetrahedronGeometry(Math.random() + 1);
             }
 
-            const color = Math.random() * 0xffffff; // gives mesh a random color
-            const material = new THREE.MeshStandardMaterial({ color: color });
+            const randomColor = new THREE.Color(Math.random(), Math.random(), Math.random());
+
+            const material = new THREE.ShaderMaterial({
+                vertexShader: document.getElementById('vertexShader').textContent,
+                fragmentShader: document.getElementById('fragmentShader').textContent,
+                uniforms: {
+                    uColor: {value: randomColor}, // assign random color
+                    ambientLightColor: {value: new THREE.Color(0.3, 0.3, 0.3)}, // ambient light
+                    directionalLightColor: {value: new THREE.Color(1.0, 1.0, 1.0)} // direction light
+                }
+            }); 
+            
             const mesh = new THREE.Mesh(geometry, material);
 
             const randomDrift = Math.random(); // assigns randomDrift a random number between 0 and 1
@@ -101,11 +140,7 @@
             scene.add(obj); // add obj to scene
         }
 
-        scene.add(new THREE.AmbientLight(0xffffff)); // adds lighting to show shape colors
-        const light = new THREE.DirectionalLight(0xffffff); // adds directional lighting to make shapes appear 3D
-        light.position.set(1, 1, 1).normalize();
-        scene.add(light); // adds light to the scene
-
+       
         // Sets a random position for the object
         function setRandomPosition(obj) {
             const randomX = Math.random() * 200 - 100; // Random X 
@@ -142,7 +177,7 @@
         });
 
         // Move the camera forward with delta time
-        const cameraSpeed = 20; // speed of the camera movement
+        const cameraSpeed = 25; // speed of the camera movement
 
         let lastTime = performance.now(); // initialize the last time
 
@@ -169,7 +204,6 @@
         const shakeDistance = 0.5; // shake distance
         let originalCamPosition; // store original camera position
 
-        //detects collision between objects
         function collisionDetection() {
             objectSpawn.forEach((obj) => {
                 const box = new THREE.Box3().setFromObject(obj); // create bounding box for each object
@@ -205,6 +239,7 @@
                 }
             }
         }
+
 
         // Animation loop
         function animate() {
@@ -250,7 +285,6 @@
 
         animate(); // Start the animation loop
 
-        //stencil test
         var rendererForStencilTest = new THREE.WebGLRenderer({ stencil: true });
         rendererForStencilTest.setSize(window.innerWidth, window.innerHeight);
 
