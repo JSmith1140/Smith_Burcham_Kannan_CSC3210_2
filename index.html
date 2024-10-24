@@ -22,6 +22,31 @@
         renderer.setClearColor(0xffffff); // background color is white
         renderer.setSize(window.innerWidth, window.innerHeight);
 
+        // Particle effect setup
+         function createParticleEffect(position) {
+            const particleCount = 500; // Number of particles
+            const particles = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3); // 3 coordinates for each particle
+
+            for (let i = 0; i < particleCount; i++) {
+                positions[i * 3] = position.x + (Math.random()- 0.5) * 30;   // x
+                positions[i * 3 + 1] = position.y + (Math.random()- 0.5) * 30; // y
+                positions[i * 3 + 2] = position.z + (Math.random()- 0.5) * 30; // z
+            }
+
+            particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+            const particleMaterial = new THREE.PointsMaterial({ color: 0xff0000, size: 1.0, sizeAttenuation: true });
+            const particleSystem = new THREE.Points(particles, particleMaterial);
+
+            scene.add(particleSystem);
+
+            // Remove particles after a short time
+            setTimeout(() => {
+                scene.remove(particleSystem);
+            }, 3000); // Remove after 3 seconds
+        }
+
         const objectSpawn = []; // spawns the objects
         const numObjects = 500; // Number of objects
         const visibilityRange = 150; // Range objects will be visible
@@ -153,6 +178,15 @@
                         shakeStartTime = performance.now(); 
                         shaking = true; // Start shaking 
                         originalCamPosition = camera.position.clone(); // Store the original camera position
+                         // Create particle effect at camera position
+                        createParticleEffect(camera.position);
+                        // Remove the collided object from the scene
+                scene.remove(obj);
+                // Optionally, you can recycle the object for future use
+                setTimeout(() => {
+                    setRandomPosition(obj); // Reset position for recycling
+                    scene.add(obj); // Add it back to the scene after a delay
+                }, 1000); // Delay before recycling the object
                     }
                 }
             });
